@@ -1,1 +1,0 @@
-# triadGPT.github.io
