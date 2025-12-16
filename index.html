@@ -195,7 +195,7 @@
   <div class="shell">
     <header>
       <h1>GPT Бро чат</h1>
-      <span class="badge">Gemini</span>
+      <span class="badge">OpenRouter · Mistralai</span>
     </header>
 
     <main id="messages" aria-live="polite"></main>
@@ -215,8 +215,8 @@
     const formEl = document.getElementById("chat-form");
     const sendBtn = document.getElementById("send-btn");
 
-    const API_KEY = "AIzaSyCIkfXXtm_IEewo1qceoLRiIAj_xtrRF1A"; // Google AI Studio
-    const MODEL = "gemini-1.5-flash";
+    const API_KEY = "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"; // OpenRouter key (хранить безопасно!)
+    const MODEL = "mistralai/devstral-2512:free";
     const state = { history: [] };
 
     formEl.addEventListener("submit", async (event) => {
@@ -280,33 +280,36 @@
       }
     }
 
-    // Google AI Studio / Gemini
+    // OpenRouter (kwaipilot/kat-coder-pro:free)
     async function callModel(history) {
       const payload = {
-        contents: history.map((m) => ({
-          role: m.role === "assistant" ? "model" : "user",
-          parts: [{ text: m.content }]
-        }))
+        model: MODEL,
+        messages: history.map((m) => ({
+          role: m.role,
+          content: m.content
+        })),
+        max_tokens: 800
       };
 
-      const res = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent?key=${API_KEY}`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload)
-        }
-      );
+      const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${API_KEY}`,
+          "HTTP-Referer": "http://localhost", // укажи свой домен/репозиторий, если есть
+          "X-Title": "GPT Bro Chat"
+        },
+        body: JSON.stringify(payload)
+      });
 
       if (!res.ok) {
         const text = await res.text();
-        throw new Error(`Gemini error ${res.status}: ${text}`);
+        throw new Error(`OpenRouter error ${res.status}: ${text}`);
       }
 
       const data = await res.json();
-      const parts = data?.candidates?.[0]?.content?.parts ?? [];
-      const text = parts.map((p) => p.text || "").join("").trim();
-      return text || "Ответ пустой.";
+      const choice = data?.choices?.[0]?.message?.content;
+      return (Array.isArray(choice) ? choice.map((c) => c.text || c).join("") : choice || "").trim() || "Ответ пустой.";
     }
 
     const escapeHtml = (str) =>
@@ -315,7 +318,7 @@
       })[ch]);
 
     // Warm welcome
-    addMessage("assistant", "Йо! Я GPT бро. Пиши, чем помочь?");
+    addMessage("assistant", "Йо! Я GondonGPT бро. Пиши, чем помочь?");
   </script>
 </body>
 </html>
